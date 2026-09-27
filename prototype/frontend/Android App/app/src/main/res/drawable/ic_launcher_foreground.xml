@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Radar beam arc in emerald green -->
+    <path
+        android:fillColor="#3300E676"
+        android:pathData="M54,54 L32,24 A38,38 0 0,1 76,24 Z" />
+    <path
+        android:strokeColor="#00E676"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M32,24 A38,38 0 0,1 76,24" />
+
+    <!-- UGV Vehicle Body / Chassis -->
+    <!-- Left track/wheels -->
+    <path
+        android:fillColor="#E2E8F0"
+        android:pathData="M34,42 c0,-2.2 1.8,-4 4,-4 h4 c2.2,0 4,1.8 4,4 v28 c0,2.2 -1.8,4 -4,4 h-4 c-2.2,0 -4,-1.8 -4,-4 z" />
+    <!-- Right track/wheels -->
+    <path
+        android:fillColor="#E2E8F0"
+        android:pathData="M62,42 c0,-2.2 1.8,-4 4,-4 h4 c2.2,0 4,1.8 4,4 v28 c0,2.2 -1.8,4 -4,4 h-4 c-2.2,0 -4,-1.8 -4,-4 z" />
+    <!-- Central Hub / Body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,45 c0,-2.5 2,-4.5 4.5,-4.5 h11 c2.5,0 4.5,2 4.5,4.5 v22 c0,2.5 -2,4.5 -4.5,4.5 h-11 c-2.5,0 -4.5,-2 -4.5,-4.5 z" />
+    <!-- Sensor Dome / Lidar Camera -->
+    <path
+        android:fillColor="#00E676"
+        android:pathData="M54,52 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+    <!-- Center optic -->
+    <path
+        android:fillColor="#0A0F14"
+        android:pathData="M54,52 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+    <!-- Forward heading arrow -->
+    <path
+        android:fillColor="#00E676"
+        android:pathData="M54,34 L58,40 H50 Z" />
+</vector>

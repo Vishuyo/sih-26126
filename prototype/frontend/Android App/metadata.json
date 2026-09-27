@@ -1,0 +1,6 @@
+{
+  "name": "UGV Edge Node",
+  "description": "UGV Edge Vision & Telemetry Client with CameraX, WebSocket streaming, and real-time HUD navigation overlay.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

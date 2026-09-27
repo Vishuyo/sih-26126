@@ -1,0 +1,17 @@
+[project]
+name = "ugv-prototype-backend"
+version = "0.1.0"
+description = "Lightweight Python compute backend for GPS-denied UGV navigation prototype"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "ultralytics>=8.3.0",
+    "opencv-python>=4.10.0",
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "websockets>=12.0",
+    "numpy>=1.24.0",
+]
+
+[tool.uv]
+package = false

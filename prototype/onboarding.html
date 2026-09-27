@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UGV Prototype - Onboarding</title>
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --fg: #f9fafb;
+      --muted: #9ca3af;
+      --accent: #00e676;
+      --accent-dim: #00e67633;
+      --card: #121519;
+      --card-border: #1f2937;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f9fafb;
+        --fg: #111827;
+        --muted: #6b7280;
+        --accent: #059669;
+        --accent-dim: #05966933;
+        --card: #ffffff;
+        --card-border: #e5e7eb;
+        --error: #dc2626;
+        --warning: #d97706;
+        --info: #2563eb;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .container { max-width: 720px; margin: 0 auto; padding: 48px 24px; }
+
+    /* Hero */
+    .hero { text-align: center; margin-bottom: 48px; }
+    .hero-icon {
+      width: 80px; height: 80px; margin: 0 auto 24px;
+      background: linear-gradient(135deg, var(--accent), #00c853);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 20px 40px var(--accent-dim);
+    }
+    .hero-icon svg { width: 40px; height: 40px; stroke: var(--bg); }
+    h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; }
+    .subtitle { color: var(--muted); font-size: 1.125rem; max-width: 480px; margin: 0 auto; }
+
+    /* Progress */
+    .progress { display: flex; gap: 8px; margin-bottom: 48px; }
+    .step {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+      position: relative;
+    }
+    .step:not(:last-child)::after {
+      content: ''; position: absolute; top: 14px; left: 50%;
+      width: 100%; height: 2px; background: var(--card-border); z-index: -1;
+    }
+    .step-circle {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--card); border: 2px solid var(--card-border);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.875rem; color: var(--muted);
+      transition: all 0.3s ease; z-index: 1;
+    }
+    .step.active .step-circle { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+    .step.done .step-circle { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+    .step-label { font-size: 0.75rem; color: var(--muted); text-align: center; white-space: nowrap; }
+    .step.active .step-label { color: var(--accent); font-weight: 600; }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { border-color: var(--accent); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+    .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .card-number {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--accent-dim); color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1.125rem; flex-shrink: 0;
+    }
+    .card-title { font-size: 1.125rem; font-weight: 600; }
+    .card-desc { color: var(--muted); margin-bottom: 20px; }
+
+    /* Code blocks */
+    .code-block {
+      background: #0b0d10; border: 1px solid var(--card-border);
+      border-radius: 10px; padding: 16px; overflow-x: auto;
+      font-family: 'SF Mono', Monaco, monospace; font-size: 0.8125rem;
+      line-height: 1.7; position: relative;
+    }
+    @media (prefers-color-scheme: light) {
+      .code-block { background: #1e293b; }
+    }
+    .code-block .comment { color: #6b7280; }
+    .code-block .command { color: var(--accent); }
+    .code-block .path { color: #a78bfa; }
+    .copy-btn {
+      position: absolute; top: 10px; right: 10px;
+      background: transparent; border: 1px solid var(--card-border);
+      color: var(--muted); padding: 6px 10px; border-radius: 6px;
+      font-size: 0.75rem; cursor: pointer; transition: all 0.2s;
+    }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { border-color: var(--accent); color: var(--accent); }
+
+    /* Checklist */
+    .checklist { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .checklist li {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px; background: rgba(0,0,0,0.15);
+      border-radius: 10px; border: 1px solid transparent;
+      transition: border-color 0.2s;
+    }
+    @media (prefers-color-scheme: light) {
+      .checklist li { background: #f3f4f6; }
+    }
+    .checklist li:hover { border-color: var(--accent-dim); }
+    .check-icon {
+      width: 22px; height: 22px; border-radius: 6px;
+      border: 2px solid var(--card-border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 2px; transition: all 0.2s;
+    }
+    .check-icon svg { width: 12px; height: 12px; stroke: var(--accent); opacity: 0; transform: scale(0.5); transition: all 0.2s; }
+    .checklist li.done .check-icon { background: var(--accent); border-color: var(--accent); }
+    .checklist li.done .check-icon svg { opacity: 1; transform: scale(1); }
+    .check-text { flex: 1; }
+    .check-label { font-weight: 500; }
+    .check-detail { font-size: 0.8125rem; color: var(--muted); margin-top: 2px; }
+
+    /* IP Input */
+    .ip-input-group { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+    .ip-input {
+      flex: 1; min-width: 200px; padding: 14px 16px;
+      background: rgba(0,0,0,0.2); border: 1px solid var(--card-border);
+      border-radius: 10px; color: var(--fg); font-size: 1rem;
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+    @media (prefers-color-scheme: light) {
+      .ip-input { background: #f3f4f6; }
+    }
+    .ip-input:focus { outline: none; border-color: var(--accent); }
+    .btn {
+      padding: 14px 28px; border-radius: 10px; font-weight: 600; font-size: 1rem;
+      cursor: pointer; transition: all 0.2s; border: none;
+    }
+    .btn-primary {
+      background: var(--accent); color: var(--bg);
+    }
+    .btn-primary:hover { background: #00c853; transform: translateY(-1px); box-shadow: 0 8px 20px var(--accent-dim); }
+    .btn-ghost {
+      background: transparent; color: var(--fg); border: 1px solid var(--card-border);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Status */
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+    }
+    .status-badge .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .status-ready { background: var(--accent-dim); color: var(--accent); }
+    .status-ready .dot { background: var(--accent); animation: pulse 2s infinite; }
+    .status-pending { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .status-pending .dot { background: var(--warning); }
+    .status-error { background: rgba(239,68,68,0.15); color: var(--error); }
+    .status-error .dot { background: var(--error); }
+
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* Footer */
+    .footer { text-align: center; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--card-border); }
+    .footer p { color: var(--muted); font-size: 0.875rem; }
+    .footer a { color: var(--accent); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Hero -->
+    <header class="hero">
+      <div class="hero-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="M6 12h12M12 4v16"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </div>
+      <h1>UGV Edge Node</h1>
+      <p class="subtitle">Onboarding guide for the SIH 2026 1-Day Prototype — Android + Python edge computing system for unmanned ground vehicles.</p>
+    </header>
+
+    <!-- Progress -->
+    <nav class="progress" aria-label="Setup progress">
+      <div class="step active" data-step="1">
+        <div class="step-circle">1</div>
+        <span class="step-label">Start Backend</span>
+      </div>
+      <div class="step" data-step="2">
+        <div class="step-circle">2</div>
+        <span class="step-label">Get IP</span>
+      </div>
+      <div class="step" data-step="3">
+        <div class="step-circle">3</div>
+        <span class="step-label">Connect App</span>
+      </div>
+      <div class="step" data-step="4">
+        <div class="step-circle">4</div>
+        <span class="step-label">Verify</span>
+      </div>
+    </nav>
+
+    <!-- Step 1 -->
+    <section class="card" id="step-1">
+      <div class="card-header">
+        <div class="card-number">1</div>
+        <h2 class="card-title">Start Python Backend</h2>
+      </div>
+      <p class="card-desc">Launch the WebSocket server on your laptop. It runs YOLOv11s detection and the reactive planner.</p>
+      <div class="code-block">
+        <button class="copy-btn" data-copy="cd prototype/backend&#10;./setup.sh&#10;uv run python server.py">Copy</button>
+        <span class="comment"># First time only</span>
+        <span class="command">cd</span> <span class="path">prototype/backend</span>
+        <span class="command">./setup.sh</span>
+        <span class="comment"># Then start server</span>
+        <span class="command">uv run python server.py</span>
+      </div>
+      <ul class="checklist">
+        <li>
+          <div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="check-text">
+            <div class="check-label">Terminal shows</div>
+            <div class="check-detail"><code>WebSocket server started on ws://0.0.0.0:8080</code></div>
+          </div>
+        </li>
+        <li>
+          <div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="check-text">
+            <div class="check-label">Model loaded</div>
+            <div class="check-detail"><code>Loaded YOLO model from yolo11s.pt on device 0</code></div>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Step 2 -->
+    <section class="card" id="step-2">
+      <div class="card-header">
+        <div class="card-number">2</div>
+        <h2 class="card-title">Get Laptop IP Address</h2>
+      </div>
+      <p class="card-desc">Find your laptop's LAN IP so the Android app can connect. Both devices must be on the same WiFi.</p>
+      <div class="code-block">
+        <button class="copy-btn" data-copy="ip route get 1.1.1.1 | awk '{print $7}'">Copy</button>
+        <span class="command">ip route get 1.1.1.1 | awk '{print $7}'</span>
+      </div>
+      <p style="color: var(--muted); font-size: 0.875rem; margin-bottom: 12px;">Example output: <code>192.168.0.105</code></p>
+      <div class="ip-input-group">
+        <input type="text" class="ip-input" id="laptopIp" placeholder="192.168.x.x" aria-label="Laptop IP address">
+        <button class="btn btn-primary" id="saveIpBtn">Save IP</button>
+      </div>
+      <p class="check-detail" id="ipHint" style="margin-top: 8px;">Enter the IP above to pre-fill the connection command in Step 3.</p>
+    </section>
+
+    <!-- Step 3 -->
+    <section class="card" id="step-3">
+      <div class="card-header">
+        <div class="card-number">3</div>
+        <h2 class="card-title">Connect Android App</h2>
+      </div>
+      <p class="card-desc">Build and run the app, then enter the backend address.</p>
+      <ol style="margin-left: 20px; color: var(--muted); line-height: 2;">
+        <li>Open <code>prototype/frontend/Android App</code> in Android Studio</li>
+        <li>Build &amp; run on device (USB or wireless ADB)</li>
+        <li>Grant <strong>Camera Permission</strong> when prompted</li>
+        <li>Enter address: <code id="displayIp">192.168.x.x:8080</code></li>
+        <li>Tap <strong>Connect</strong></li>
+      </ol>
+      <div class="code-block" style="margin-top: 16px;">
+        <button class="copy-btn" data-copy="192.168.x.x:8080">Copy</button>
+        <span class="path" id="connectionString">192.168.x.x:8080</span>
+      </div>
+    </section>
+
+    <!-- Step 4 -->
+    <section class="card" id="step-4">
+      <div class="card-header">
+        <div class="card-number">4</div>
+        <h2 class="card-title">Verify Connection</h2>
+      </div>
+      <p class="card-desc">Confirm the full pipeline is working end-to-end.</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div style="background: rgba(0,0,0,0.15); padding: 16px; border-radius: 10px; border: 1px solid var(--card-border);">
+          <strong style="color: var(--accent);">Backend Terminal</strong>
+          <pre style="margin-top: 8px; font-family: monospace; font-size: 0.75rem; color: var(--muted); white-space: pre-wrap;">Client connected: ('192.168.0.105', 54321)
+Processed frame in 12.3ms | 2 detections | v=0.30 ω=0.30</pre>
+        </div>
+        <div style="background: rgba(0,0,0,0.15); padding: 16px; border-radius: 10px; border: 1px solid var(--card-border);">
+          <strong style="color: var(--accent);">Android Screen</strong>
+          <ul class="checklist" style="margin-top: 8px;">
+            <li class="done"><div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="check-text"><div class="check-label">Status: STREAMING (green pulse)</div></div></li>
+            <li class="done"><div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="check-text"><div class="check-label">FPS: ~30</div></div></li>
+            <li class="done"><div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="check-text"><div class="check-label">Red boxes on obstacles</div></div></li>
+            <li class="done"><div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="check-text"><div class="check-label">Green trajectory curve</div></div></li>
+            <li class="done"><div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="check-text"><div class="check-label">Velocity/steering gauges</div></div></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Reference -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-number">⚡</div>
+        <h2 class="card-title">Quick Reference</h2>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+        <div style="background: rgba(0,0,0,0.15); padding: 16px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center;">
+          <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);">1280×720</div>
+          <div style="color: var(--muted); font-size: 0.8125rem;">Camera Resolution</div>
+        </div>
+        <div style="background: rgba(0,0,0,0.15); padding: 16px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center;">
+          <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);">30 FPS</div>
+          <div style="color: var(--muted); font-size: 0.8125rem;">Target Frame Rate</div>
+        </div>
+        <div style="background: rgba(0,0,0,0.15); padding: 16px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center;">
+          <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);">Q85</div>
+          <div style="color: var(--muted); font-size: 0.8125rem;">JPEG Quality</div>
+        </div>
+        <div style="background: rgba(0,0,0,0.15); padding: 16px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center;">
+          <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);">47% mAP</div>
+          <div style="color: var(--muted); font-size: 0.8125rem;">YOLOv11s Accuracy</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Troubleshooting -->
+    <details class="card" style="cursor: pointer;">
+      <summary class="card-header" style="margin-bottom: 0;">
+        <div class="card-number">🔧</div>
+        <h2 class="card-title">Troubleshooting</h2>
+      </summary>
+      <div style="margin-top: 16px; display: grid; gap: 12px;">
+        <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); padding: 16px; border-radius: 10px;">
+          <strong style="color: var(--error);">"Connection refused"</strong>
+          <p style="color: var(--muted); margin-top: 4px;">Start backend <strong>first</strong>, then connect Android. Check firewall: <code>ufw allow 8080</code></p>
+        </div>
+        <div style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); padding: 16px; border-radius: 10px;">
+          <strong style="color: var(--warning);">"Unknown host" / Timeout</strong>
+          <p style="color: var(--muted); margin-top: 4px;">Both devices on same WiFi? Verify IP with <code>ip route get 1.1.1.1 | awk '{print $7}'</code></p>
+        </div>
+        <div style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); padding: 16px; border-radius: 10px;">
+          <strong style="color: var(--info);">Low FPS / Late boxes</strong>
+          <p style="color: var(--muted); margin-top: 4px;">CameraProvider now uses 1280×720 @ Q85 + AE/AF lock. Restart app after rebuild.</p>
+        </div>
+        <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); padding: 16px; border-radius: 10px;">
+          <strong style="color: var(--error);">CUDA OOM</strong>
+          <p style="color: var(--muted); margin-top: 4px;">Edit <code>perception.py:14</code> → <code>device="cpu"</code> or use <code>yolo11n.pt</code></p>
+        </div>
+      </div>
+    </details>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Built for <strong>SIH 2026</strong> · 1-Day Prototype · <a href="https://github.com/Vishuyo/sih-26105">GitHub</a></p>
+    </footer>
+  </div>
+
+  <script>
+    // Copy button functionality
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const text = btn.dataset.copy || btn.nextElementSibling?.textContent?.trim();
+        if (text) {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        }
+      });
+    });
+
+    // IP input sync
+    const ipInput = document.getElementById('laptopIp');
+    const displayIp = document.getElementById('displayIp');
+    const connectionString = document.getElementById('connectionString');
+    const saveIpBtn = document.getElementById('saveIpBtn');
+    const ipHint = document.getElementById('ipHint');
+
+    function updateConnectionString(ip) {
+      const addr = `${ip}:8080`;
+      displayIp.textContent = addr;
+      connectionString.textContent = addr;
+    }
+
+    // Load saved IP
+    const savedIp = localStorage.getItem('ugv-laptop-ip');
+    if (savedIp) {
+      ipInput.value = savedIp;
+      updateConnectionString(savedIp);
+    }
+
+    saveIpBtn.addEventListener('click', () => {
+      const ip = ipInput.value.trim();
+      if (ip) {
+        localStorage.setItem('ugv-laptop-ip', ip);
+        updateConnectionString(ip);
+        saveIpBtn.textContent = 'Saved!';
+        setTimeout(() => saveIpBtn.textContent = 'Save IP', 2000);
+      }
+    });
+
+    ipInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') saveIpBtn.click();
+    });
+
+    // Progress step tracking
+    const steps = document.querySelectorAll('.step');
+    const cards = document.querySelectorAll('.card[id^="step-"]');
+
+    function updateProgress(completedStep) {
+      steps.forEach((step, i) => {
+        const num = i + 1;
+        step.classList.remove('active', 'done');
+        if (num < completedStep) step.classList.add('done');
+        else if (num === completedStep) step.classList.add('active');
+      });
+    }
+
+    // Check backend connectivity
+    async function checkBackend() {
+      try {
+        const ws = new WebSocket('ws://localhost:8080');
+        await new Promise((resolve, reject) => {
+          ws.onopen = () => { ws.close(); resolve(); };
+          ws.onerror = reject;
+          setTimeout(reject, 2000);
+        });
+        document.querySelector('#step-1 .checklist li:first-child').classList.add('done');
+      } catch {}
+    }
+    checkBackend();
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+  </script>
+</body>
+</html>

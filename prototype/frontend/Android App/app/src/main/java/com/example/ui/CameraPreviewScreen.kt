@@ -10,20 +10,28 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.weight
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -40,8 +48,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -63,9 +72,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -421,6 +432,7 @@ fun CameraPreviewScreen(
                                 }
                             }
                         }
+                    }
 
                     // Main Row: IP Field + Connect Button (compact)
                     Row(
@@ -428,25 +440,65 @@ fun CameraPreviewScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        OutlinedTextField(
+                        val interactionSource = remember { MutableInteractionSource() }
+                        @OptIn(ExperimentalMaterial3Api::class)
+                        BasicTextField(
                             value = uiState.serverAddress,
                             onValueChange = { viewModel.updateServerAddress(it) },
-                            placeholder = { Text("192.168.x.x:8080", fontSize = 11.sp) },
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            textStyle = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = WaynestBlack,
-                                unfocusedBorderColor = Color(0xFFE5E7EB),
-                                focusedContainerColor = Color(0xFFF9FAFB),
-                                unfocusedContainerColor = Color(0xFFF9FAFB),
-                                focusedTextColor = WaynestBlack,
-                                unfocusedTextColor = WaynestBlack
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp),
+                            textStyle = TextStyle(
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = WaynestBlack
                             ),
+                            singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
                             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus(); viewModel.connect() }),
-                            leadingIcon = { Icon(Icons.Default.Videocam, contentDescription = null, tint = WaynestMidGray, modifier = Modifier.size(16.dp)) },
-                            modifier = Modifier.weight(1f).height(40.dp)
+                            interactionSource = interactionSource,
+                            decorationBox = { innerTextField ->
+                                OutlinedTextFieldDefaults.DecorationBox(
+                                    value = uiState.serverAddress,
+                                    innerTextField = innerTextField,
+                                    enabled = true,
+                                    singleLine = true,
+                                    visualTransformation = VisualTransformation.None,
+                                    interactionSource = interactionSource,
+                                    placeholder = { Text("192.168.0.105:8080", fontSize = 11.sp, color = WaynestMidGray) },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Videocam,
+                                            contentDescription = null,
+                                            tint = WaynestMidGray,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    },
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = WaynestBlack,
+                                        unfocusedBorderColor = Color(0xFFE5E7EB),
+                                        focusedContainerColor = Color(0xFFF9FAFB),
+                                        unfocusedContainerColor = Color(0xFFF9FAFB),
+                                        focusedTextColor = WaynestBlack,
+                                        unfocusedTextColor = WaynestBlack
+                                    ),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                    container = {
+                                        OutlinedTextFieldDefaults.Container(
+                                            enabled = true,
+                                            isError = false,
+                                            interactionSource = interactionSource,
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedBorderColor = WaynestBlack,
+                                                unfocusedBorderColor = Color(0xFFE5E7EB),
+                                                focusedContainerColor = Color(0xFFF9FAFB),
+                                                unfocusedContainerColor = Color(0xFFF9FAFB)
+                                            ),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                    }
+                                )
+                            }
                         )
 
                         val isConnectedOrStreaming = uiState.status == ConnectionStatus.STREAMING || uiState.status == ConnectionStatus.CONNECTED
@@ -458,7 +510,7 @@ fun CameraPreviewScreen(
                                 containerColor = if (isConnectedOrStreaming) WaynestDarkGray else WaynestBlack,
                                 contentColor = WaynestWhite
                             ),
-                            modifier = Modifier.height(40.dp)
+                            modifier = Modifier.height(44.dp)
                         ) {
                             Icon(
                                 imageVector = if (isConnectedOrStreaming) Icons.Default.Stop else Icons.Default.PlayArrow,

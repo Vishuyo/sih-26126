@@ -4,11 +4,14 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CaptureRequest
 import android.util.Log
 import android.util.Size
 import android.view.Surface
+import androidx.annotation.OptIn
+import androidx.camera.camera2.interop.Camera2CameraControl
+import androidx.camera.camera2.interop.CaptureRequestOptions
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -124,19 +127,17 @@ class CameraProvider(
         }
     }
 
+    @OptIn(ExperimentalCamera2Interop::class)
     private fun applyAeAfLock() {
         camera?.cameraControl?.let { control ->
             try {
                 // Lock auto-exposure and auto-focus to prevent frame brightness/focus shifts
-                control.setSingleCaptureRequestOptions(
-                    android.hardware.camera2.CaptureRequest.Builder(
-                        camera!!.cameraInfo.cameraCharacteristics
-                            .get(CameraCharacteristics.REQUEST_TEMPLATE_PREVIEW)
-                    ).apply {
-                        set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_LOCKED)
-                        set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF)
-                    }.build()
-                )
+                val camera2Control = Camera2CameraControl.from(control)
+                val captureRequestOptions = CaptureRequestOptions.Builder()
+                    .setCaptureRequestOption(CaptureRequest.CONTROL_AE_LOCK, true)
+                    .setCaptureRequestOption(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF)
+                    .build()
+                camera2Control.setCaptureRequestOptions(captureRequestOptions)
             } catch (e: Exception) {
                 Log.w(tag, "AE/AF lock failed: ${e.message}")
             }

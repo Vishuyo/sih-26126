@@ -21,7 +21,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 data class StreamUiState(
-    val serverAddress: String = "192.168.1.100:8080/stream",
+    val serverAddress: String = "192.168.0.105:8080/stream",
     val status: ConnectionStatus = ConnectionStatus.DISCONNECTED,
     val errorMessage: String? = null,
     val isSimulationMode: Boolean = false,

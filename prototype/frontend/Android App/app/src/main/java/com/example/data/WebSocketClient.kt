@@ -73,7 +73,7 @@ class WebSocketClient(
         private set
 
     /**
-     * Connect to the laptop WebSocket server (e.g. ws://192.168.1.100:8080/stream)
+     * Connect to the laptop WebSocket server (e.g. ws://192.168.0.105:8080/stream)
      */
     fun connect(url: String) {
         disconnect()

@@ -14,6 +14,7 @@ import androidx.camera.camera2.interop.CaptureRequestOptions
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
@@ -24,6 +25,7 @@ import androidx.lifecycle.LifecycleOwner
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /**
  * CameraX wrapper handling camera lifecycle, Preview use case,
@@ -120,26 +122,50 @@ class CameraProvider(
                 imageAnalysis
             )
 
-            // Apply AE/AF lock for stable frames after binding
-            applyAeAfLock()
+            // Apply Continuous Auto-Focus (AF) and Auto-Exposure (AE) for optimal frame clarity
+            enableContinuousAutoExposureAndFocus()
         } catch (e: Exception) {
             Log.w(tag, "Use case binding warning: ${e.message}")
         }
     }
 
     @OptIn(ExperimentalCamera2Interop::class)
-    private fun applyAeAfLock() {
+    fun enableContinuousAutoExposureAndFocus() {
         camera?.cameraControl?.let { control ->
             try {
-                // Lock auto-exposure and auto-focus to prevent frame brightness/focus shifts
                 val camera2Control = Camera2CameraControl.from(control)
                 val captureRequestOptions = CaptureRequestOptions.Builder()
-                    .setCaptureRequestOption(CaptureRequest.CONTROL_AE_LOCK, true)
-                    .setCaptureRequestOption(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF)
+                    .setCaptureRequestOption(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
+                    .setCaptureRequestOption(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
+                    .setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
+                    .setCaptureRequestOption(CaptureRequest.CONTROL_AE_LOCK, false)
+                    .setCaptureRequestOption(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO)
+                    .setCaptureRequestOption(CaptureRequest.CONTROL_AWB_LOCK, false)
                     .build()
                 camera2Control.setCaptureRequestOptions(captureRequestOptions)
+                Log.d(tag, "Continuous auto-focus and auto-exposure enabled successfully")
             } catch (e: Exception) {
-                Log.w(tag, "AE/AF lock failed: ${e.message}")
+                Log.w(tag, "Auto Exposure/Focus configuration failed: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Tap-to-focus and exposure metering on a specific (x, y) point on the preview.
+     * After 3 seconds, it automatically reverts to continuous auto-focus and auto-exposure.
+     */
+    fun triggerFocusAndMetering(x: Float, y: Float, previewView: PreviewView) {
+        camera?.cameraControl?.let { control ->
+            try {
+                val factory = previewView.meteringPointFactory
+                val point = factory.createPoint(x, y)
+                val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE)
+                    .setAutoCancelDuration(3, TimeUnit.SECONDS)
+                    .build()
+                control.startFocusAndMetering(action)
+                Log.d(tag, "Triggered focus and metering at ($x, $y)")
+            } catch (e: Exception) {
+                Log.w(tag, "Tap to focus/metering failed: ${e.message}")
             }
         }
     }

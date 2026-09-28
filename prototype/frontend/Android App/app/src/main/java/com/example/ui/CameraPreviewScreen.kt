@@ -13,6 +13,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -36,7 +39,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.PlayArrow
@@ -67,6 +74,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -183,6 +191,13 @@ fun CameraPreviewScreen(
                 },
                 modifier = Modifier
                     .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures { offset ->
+                            previewViewRef?.let { pv ->
+                                cameraProvider.triggerFocusAndMetering(offset.x, offset.y, pv)
+                            }
+                        }
+                    }
                     .testTag("camera_preview_view")
             )
         } else {
@@ -434,6 +449,65 @@ fun CameraPreviewScreen(
                         }
                     }
 
+                    // Saved Endpoints (Horizontal scrollable chip list)
+                    if (uiState.savedUrls.isNotEmpty()) {
+                        LazyRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            items(uiState.savedUrls, key = { it }) { url ->
+                                val isSelected = url == uiState.serverAddress.trim()
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (isSelected) WaynestBlack else Color(0xFFF3F4F6),
+                                    border = BorderStroke(
+                                        1.dp,
+                                        if (isSelected) WaynestBlack else Color(0xFFE5E7EB)
+                                    ),
+                                    modifier = Modifier.clickable {
+                                        viewModel.selectSavedUrl(url)
+                                    }
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(start = 8.dp, end = 4.dp, top = 3.dp, bottom = 3.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Dns,
+                                            contentDescription = null,
+                                            tint = if (isSelected) WaynestWhite else WaynestMidGray,
+                                            modifier = Modifier.size(11.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = url,
+                                            fontSize = 10.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) WaynestWhite else WaynestDarkGray
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .size(16.dp)
+                                                .clickable {
+                                                    viewModel.deleteSavedUrl(url)
+                                                },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Delete endpoint",
+                                                tint = if (isSelected) WaynestWhite.copy(alpha = 0.7f) else WaynestMidGray,
+                                                modifier = Modifier.size(10.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Main Row: IP Field + Connect Button (compact)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -473,6 +547,25 @@ fun CameraPreviewScreen(
                                             tint = WaynestMidGray,
                                             modifier = Modifier.size(16.dp)
                                         )
+                                    },
+                                    trailingIcon = {
+                                        IconButton(
+                                            onClick = {
+                                                if (uiState.isUrlSaved) {
+                                                    viewModel.deleteSavedUrl(uiState.serverAddress.trim())
+                                                } else {
+                                                    viewModel.saveCurrentUrl()
+                                                }
+                                            },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = if (uiState.isUrlSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                                contentDescription = if (uiState.isUrlSaved) "Remove from saved" else "Save endpoint",
+                                                tint = if (uiState.isUrlSaved) WaynestBlack else WaynestMidGray,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
                                     },
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = WaynestBlack,

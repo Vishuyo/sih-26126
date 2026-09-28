@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.CameraProvider
 import com.example.data.ConnectionStatus
 import com.example.data.OrientationProvider
+import com.example.data.StreamUrlStorage
 import com.example.data.WebSocketClient
 import com.example.model.NavigationData
 import com.example.model.TelemetryPacket
@@ -22,6 +23,8 @@ import kotlinx.coroutines.launch
 
 data class StreamUiState(
     val serverAddress: String = "192.168.0.105:8080/stream",
+    val savedUrls: List<String> = emptyList(),
+    val isUrlSaved: Boolean = false,
     val status: ConnectionStatus = ConnectionStatus.DISCONNECTED,
     val errorMessage: String? = null,
     val isSimulationMode: Boolean = false,
@@ -34,7 +37,15 @@ data class StreamUiState(
 
 class StreamViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _uiState = MutableStateFlow(StreamUiState())
+    private val streamUrlStorage = StreamUrlStorage(application.applicationContext)
+
+    private val _uiState = MutableStateFlow(
+        StreamUiState(
+            serverAddress = streamUrlStorage.getLastUsedUrl(),
+            savedUrls = streamUrlStorage.getSavedUrls(),
+            isUrlSaved = streamUrlStorage.getSavedUrls().contains(streamUrlStorage.getLastUsedUrl().trim())
+        )
+    )
     val uiState: StateFlow<StreamUiState> = _uiState.asStateFlow()
 
     val webSocketClient = WebSocketClient(viewModelScope)
@@ -90,11 +101,49 @@ class StreamViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun updateServerAddress(address: String) {
-        _uiState.value = _uiState.value.copy(serverAddress = address)
+        val trimmed = address.trim()
+        _uiState.value = _uiState.value.copy(
+            serverAddress = address,
+            isUrlSaved = _uiState.value.savedUrls.contains(trimmed)
+        )
+    }
+
+    fun saveCurrentUrl() {
+        val current = _uiState.value.serverAddress.trim()
+        if (current.isNotEmpty()) {
+            val updated = streamUrlStorage.saveUrl(current)
+            _uiState.value = _uiState.value.copy(
+                savedUrls = updated,
+                isUrlSaved = true
+            )
+        }
+    }
+
+    fun deleteSavedUrl(url: String) {
+        val updated = streamUrlStorage.deleteUrl(url)
+        val current = _uiState.value.serverAddress.trim()
+        _uiState.value = _uiState.value.copy(
+            savedUrls = updated,
+            isUrlSaved = updated.contains(current)
+        )
+    }
+
+    fun selectSavedUrl(url: String) {
+        _uiState.value = _uiState.value.copy(
+            serverAddress = url,
+            isUrlSaved = _uiState.value.savedUrls.contains(url.trim())
+        )
     }
 
     fun connect() {
         val addr = _uiState.value.serverAddress.trim()
+        if (addr.isNotEmpty()) {
+            val updated = streamUrlStorage.saveUrl(addr)
+            _uiState.value = _uiState.value.copy(
+                savedUrls = updated,
+                isUrlSaved = true
+            )
+        }
         webSocketClient.connect(addr)
     }
 

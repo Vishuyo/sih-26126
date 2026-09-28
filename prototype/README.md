@@ -138,7 +138,7 @@ sequenceDiagram
 | `ui/CameraPreviewScreen.kt` | Camera + controls (compact UI) |
 | `ui/HudOverlay.kt` | Canvas drawing (boxes, trajectory, gauges) |
 | `data/WebSocketClient.kt` | Connection + messaging |
-| `data/CameraProvider.kt` | CameraX frame capture (720p, Q85, AE/AF lock) |
+| `data/CameraProvider.kt` | CameraX frame capture (720p, Q85, Continuous AF/AE + Tap-to-Focus) |
 | `data/OrientationProvider.kt` | Sensor telemetry (20Hz) |
 | `viewmodel/StreamViewModel.kt` | State management |
 | `model/NavigationData.kt` | JSON parsing |
@@ -290,7 +290,7 @@ The UI shows connection state via a **unified header pill** (brand + status merg
 | "Unknown host" | Check laptop IP: `ip route get 1.1.1.1 \| awk '{print $7}'` |
 | "Timeout" | Both on same WiFi? |
 | Camera black screen | Grant camera permission in Android settings |
-| Low FPS / late boxes | CameraProvider now uses 1280x720 @ Q85 + AE/AF lock |
+| Low FPS / late boxes | CameraProvider uses 1280x720 @ Q85 + Continuous AF/AE |
 | Jittery steering | Temporal smoothing active (α=0.7) in planner.py |
 | Missed small obstacles | Backend uses conf=0.25 + class filter (person/vehicle) |
 
@@ -331,6 +331,7 @@ curl -i http://192.168.0.105:8080/
 | `docs/prototype/android-context.md` | System design |
 | `docs/prototype/android-implementation-instructions.md` | Build instructions |
 | `docs/prototype/backend-implementation-plan.md` | Backend plan |
+| `docs/prototype/video-demo.md` | SIH submission video recording guide & script |
 | `INTEGRATION_COMPLETE.md` | Integration status + quick reference |
 
 ---
@@ -363,7 +364,7 @@ asyncio.run(test())
 The integration is **complete and tested**. Both sides implement the same WebSocket protocol, JSON schema, and coordinate systems.
 
 **Android app includes:**
-- ✅ Live camera streaming (1280x720, JPEG Q85, AE/AF locked)
+- ✅ Live camera streaming (1280x720, JPEG Q85, Continuous AF/AE + Tap-to-Focus)
 - ✅ WebSocket client with auto-reconnect
 - ✅ JSON parsing matching backend format
 - ✅ HUD overlay with Canvas (red boxes, green trajectory, gauges)
